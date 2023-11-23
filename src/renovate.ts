@@ -53,7 +53,14 @@ class Renovate {
       dockerArguments.push(`--user ${dockerUser}`);
     }
 
-    dockerArguments.push('--volume /tmp:/tmp', '--rm', this.docker.image());
+    const tempDir =
+      process.env.TMPDIR || process.env.TMP || process.env.TEMP || '/tmp';
+
+    dockerArguments.push(
+      `--volume ${tempDir}:/tmp`,
+      '--rm',
+      this.docker.image()
+    );
 
     if (dockerCmd !== null) {
       dockerArguments.push(dockerCmd);
