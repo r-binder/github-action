@@ -25587,6 +25587,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Input = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const path_1 = __importDefault(__nccwpck_require__(1017));
+const fs_1 = __nccwpck_require__(7147);
 class Input {
     constructor() {
         this.options = {
@@ -25594,6 +25595,11 @@ class Input {
             configurationFile: {
                 input: 'configurationFile',
                 env: 'RENOVATE_CONFIG_FILE',
+                optional: true,
+            },
+            baseDir: {
+                input: 'baseDir',
+                env: 'RENOVATE_BASE_DIR',
                 optional: true,
             },
             token: {
@@ -25611,6 +25617,7 @@ class Input {
             .filter((pair) => pair[1] !== undefined));
         this.token = this.get(this.options.token.input, this.options.token.env, this.options.token.optional);
         this._configurationFile = this.get(this.options.configurationFile.input, this.options.configurationFile.env, this.options.configurationFile.optional);
+        this._baseDir = this.get(this.options.baseDir.input, this.options.baseDir.env, this.options.baseDir.optional);
     }
     configurationFile() {
         if (this._configurationFile.value !== '') {
@@ -25618,6 +25625,19 @@ class Input {
                 key: this._configurationFile.key,
                 value: path_1.default.resolve(this._configurationFile.value),
             };
+        }
+        return null;
+    }
+    baseDir() {
+        if (this._baseDir.value !== '') {
+            return this._baseDir.value;
+        }
+        if (this._configurationFile.value !== '') {
+            const buffer = (0, fs_1.readFileSync)(this._configurationFile.value);
+            const configFileJson = JSON.parse(buffer.toString());
+            return configFileJson.baseDir === undefined
+                ? null
+                : configFileJson.baseDir;
         }
         return null;
     }
@@ -25719,9 +25739,9 @@ class Renovate {
         if (dockerUser !== null) {
             dockerArguments.push(`--user ${dockerUser}`);
         }
-        const renovateBaseDirEnvVar = this.input.toEnvironmentVariables().find((e) => e.key === 'RENOVATE_BASE_DIR');
-        if (renovateBaseDirEnvVar !== undefined) {
-            dockerArguments.push(`--volume ${renovateBaseDirEnvVar.value}:${renovateBaseDirEnvVar.value}`);
+        const renovateBaseDir = this.input.baseDir();
+        if (renovateBaseDir) {
+            dockerArguments.push(`--volume ${renovateBaseDir}:${renovateBaseDir}`);
         }
         else {
             dockerArguments.push('--volume /tmp:/tmp');
