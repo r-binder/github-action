@@ -10,6 +10,11 @@ inputs:
       Configuration file to configure Renovate. Either use this input or the
       'RENOVATE_CONFIG_FILE' environment variable.
     required: false
+  baseDir:
+    description: |
+      The base directory for Renovate to store local files, including repository files and cache. Either use this input or the
+      'RENOVATE_BASE_DIR' environment variable.
+    required: false
   token:
     description: |
       GitHub personal access token that Renovate should use. This should be
