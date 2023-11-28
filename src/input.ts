@@ -1,9 +1,14 @@
 import * as core from '@actions/core';
 import path from 'path';
+import { readFileSync } from 'fs';
 
 interface EnvironmentVariable {
   key: string;
   value: string;
+}
+
+interface RenovateConfigFile {
+  baseDir: string;
 }
 
 class Input {
@@ -13,6 +18,11 @@ class Input {
     configurationFile: {
       input: 'configurationFile',
       env: 'RENOVATE_CONFIG_FILE',
+      optional: true,
+    },
+    baseDir: {
+      input: 'baseDir',
+      env: 'RENOVATE_BASE_DIR',
       optional: true,
     },
     token: {
@@ -25,6 +35,7 @@ class Input {
 
   private readonly _environmentVariables: Map<string, string>;
   private readonly _configurationFile: Readonly<EnvironmentVariable>;
+  private readonly _baseDir: Readonly<EnvironmentVariable>;
 
   constructor() {
     const envRegexInput = core.getInput('env-regex');
@@ -47,6 +58,11 @@ class Input {
       this.options.configurationFile.env,
       this.options.configurationFile.optional
     );
+    this._baseDir = this.get(
+      this.options.baseDir.input,
+      this.options.baseDir.env,
+      this.options.baseDir.optional
+    );
   }
 
   configurationFile(): EnvironmentVariable | null {
@@ -55,6 +71,24 @@ class Input {
         key: this._configurationFile.key,
         value: path.resolve(this._configurationFile.value),
       };
+    }
+
+    return null;
+  }
+
+  baseDir(): string | null {
+    if (this._baseDir.value !== '') {
+      return this._baseDir.value;
+    }
+
+    if (this._configurationFile.value !== '') {
+      const buffer = readFileSync(this._configurationFile.value);
+      const configFileJson = JSON.parse(
+        buffer.toString()
+      ) as RenovateConfigFile;
+      return configFileJson.baseDir === undefined
+        ? null
+        : configFileJson.baseDir;
     }
 
     return null;

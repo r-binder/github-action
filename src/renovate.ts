@@ -53,13 +53,9 @@ class Renovate {
       dockerArguments.push(`--user ${dockerUser}`);
     }
 
-    const renovateBaseDirEnvVar = this.input
-      .toEnvironmentVariables()
-      .find((e) => e.key === 'RENOVATE_BASE_DIR');
-    if (renovateBaseDirEnvVar !== undefined) {
-      dockerArguments.push(
-        `--volume ${renovateBaseDirEnvVar.value}:${renovateBaseDirEnvVar.value}`
-      );
+    const renovateBaseDir = this.input.baseDir();
+    if (renovateBaseDir) {
+      dockerArguments.push(`--volume ${renovateBaseDir}:${renovateBaseDir}`);
     } else {
       dockerArguments.push('--volume /tmp:/tmp');
     }
